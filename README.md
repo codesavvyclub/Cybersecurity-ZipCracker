@@ -68,8 +68,6 @@ Create a test ZIP file with one of those passwords and try to crack it using the
 ```
 zip-password-cracker/
 ├── main.py             # Main password cracker script
-├── rockyou.txt         # Sample wordlist
-├── YouCrackedMe.zip    # Sample ZIP file to crack
 ├── README.md           # Project documentation
 └── requirements.txt    # Required Python packages
 ```
