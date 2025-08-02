@@ -1,39 +1,44 @@
-import zipfile
+import pyzipper
 import sys
+from tqdm import tqdm
 import os
-from tqdm import tqdm  # Make sure tqdm is imported
 
-output_dir = os.path.join(os.getcwd(), "CrackedOutput")
-os.makedirs(output_dir, exist_ok=True)
+# Handle arguments
+if len(sys.argv) < 3:
+    print("Usage: python main.py <zipfile> <wordlist>")
+    sys.exit(1)
 
-# The zipfile to crack
 zip_path = sys.argv[1]
-
-# The password list path you want to use
 wordlist_path = sys.argv[2]
 
-# Initialize the Zip file object
-zip_file = zipfile.ZipFile(zip_path)
+# Define output path to Desktop
+desktop = os.path.join(os.path.expanduser("~"), "OneDrive\Desktop")
+output_dir = os.path.join(desktop, "CrackedOutput")
+os.makedirs(output_dir, exist_ok=True)
 
-# Count the number of words in this wordlist
+# Load wordlist
 with open(wordlist_path, "rb") as f:
     words = list(f)
-    n_words = len(words)
+    print("[*] Total passwords to test:", len(words))
 
-# Print the total number of passwords
-print("Total passwords to test:", n_words)
+# Attempt to crack
+with pyzipper.AESZipFile(zip_path) as zf:
+    for word in tqdm(words, total=len(words), unit="word", desc="Cracking"):
+        pwd = word.strip()
+        try:
+            zf.extractall(path=output_dir, pwd=pwd)
+        except RuntimeError:
+            continue
+        except Exception as e:
+            print(f"[!] Error: {e}")
+            continue
+        else:
+            print(f"[+] Password found: {pwd.decode(errors='ignore')}")
+            print(f"[+] Files extracted to: {output_dir}")
+            sys.exit(0)
 
-# Try passwords
-for word in tqdm(words, total=n_words, unit="word"):
-    try:
-        zip_file.extractall(path=output_dir,pwd=word.strip().strip(b'\r\n'))
-    except:
-        continue
-    else:
-        print("[+] Password found:", word.decode().strip())
-        print(f"[+] Extracted files to: {output_dir}")
-        exit(0)  # <-- fixed from exit(o)
+print("[-] Password not found. Try another wordlist.")
 
-print("[!] Password not found, try another wordlist")
+
 
 
